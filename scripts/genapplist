@@ -1,0 +1,4 @@
+cat <<END
+cluster	cnvgrib		$(which cnvgrib)	null	null	null
+cluster wgrib2		$(which wgrib2)		null	null	null
+END

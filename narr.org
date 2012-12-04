@@ -1,0 +1,258 @@
+
+
+* Documentation
+
+[[http://nomads.ncdc.noaa.gov/docs/ncdc-narrdsi-6175-final.pdf][National Climatic Data Center Data Documentation]]
+
+* Idenitfy which files we need
+
+Some files on the [[ftp://nomads.ncdc.noaa.gov/NARR/][NARR section of the NOMADS FTP server]] appear to be
+redundant so do a checksum comparison to be sure that there is no
+difference.
+
+#+begin_src sh :results output verbatim :session *shell* :cache yes
+  wget --timestamping --force-directories --no-host-directories --directory-prefix data --cut-dirs=2 --no-verbose \
+      http://nomads.ncdc.noaa.gov/data/narr/197901/19790101/narr-a_221_19790101_0000_000.grb
+  wget --timestamping --force-directories --no-host-directories --directory-prefix data --cut-dirs=2 --no-verbose \
+      http://nomads.ncdc.noaa.gov/data/narr/197901/197901/narr-a_221_19790101_0000_000.grb
+#+end_src
+
+#+RESULTS[d87f219f1d8606b95ad980e6ca8464caae0d5172]:
+: 
+: 2012-11-15 13:05:30 URL:http://nomads.ncdc.noaa.gov/data/narr/197901/19790101/narr-a_221_19790101_0000_000.grb [56399426/56399426] -> "data/197901/19790101/narr-a_221_19790101_0000_000.grb" [1]
+: > 2012-11-15 13:05:42 URL:http://nomads.ncdc.noaa.gov/data/narr/197901/197901/narr-a_221_19790101_0000_000.grb [56399426/56399426] -> "data/197901/197901/narr-a_221_19790101_0000_000.grb" [1]
+
+#+BEGIN_SRC sh :results output verbatim :session *shell*
+  find data -name narr-a_221_19790101_0000_000.grb -exec md5sum \{\} \;
+#+END_SRC
+
+#+RESULTS:
+: 3551e6ff8bf9896f1fbabf37a2613f54  data/197901/197901/narr-a_221_19790101_0000_000.grb
+: 3551e6ff8bf9896f1fbabf37a2613f54  data/197901/19790101/narr-a_221_19790101_0000_000.grb
+
+Now we can be reasonably sure that it doesn't matter what directory we take the data from.
+
+
+* Download the data
+
+Compose the URLs.
+
+#+BEGIN_SRC R :session *ssh-midway* :results silent
+  baseUrl <- "ftp://nomads.ncdc.noaa.gov/NARR"
+  
+  narrMonths <-
+    seq(
+      as.Date( "1979-01-01"),
+      as.Date( "2012-11-01"),
+      by= "month")
+  
+  urls <- paste(
+    baseUrl,
+    format( narrMonths, "%Y%m"),
+    format( narrMonths, "%Y%m"),
+    sep= "/")
+#+END_SRC
+
+Examine a sample of the resulting URLs.
+
+#+BEGIN_SRC R :session *R*
+  head( urls)
+#+END_SRC
+
+#+RESULTS:
+| ftp://nomads.ncdc.noaa.gov/NARR/197901/197901 |
+| ftp://nomads.ncdc.noaa.gov/NARR/197902/197902 |
+| ftp://nomads.ncdc.noaa.gov/NARR/197903/197903 |
+| ftp://nomads.ncdc.noaa.gov/NARR/197904/197904 |
+| ftp://nomads.ncdc.noaa.gov/NARR/197905/197905 |
+| ftp://nomads.ncdc.noaa.gov/NARR/197906/197906 |
+
+Write the URLs to a file for wget to read.
+
+#+BEGIN_SRC R :session *R* :results silent
+  cat( urls, file= "urls", sep= "\n")  
+#+END_SRC
+
+Files since 201208 do not have monthly subfolders.
+
+#+BEGIN_SRC R :session *ssh-midway* :results silent
+  
+  narrDays <-
+    seq(
+      as.Date( "2012-09-01"),
+      as.Date( "2012-11-30"),
+      by= "day")
+  
+  urls <- paste(
+    baseUrl,
+    format( narrDays, "%Y%m"),
+    format( narrDays, "%Y%m%d"),
+    sep= "/")
+#+END_SRC
+
+Examine a sample of the resulting URLs.
+
+#+BEGIN_SRC R :session *ssh-midway*
+  head( urls)
+#+END_SRC
+
+#+RESULTS:
+| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120901 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120902 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120903 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120904 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120905 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120906 |
+
+Write the URLs to a file for wget to read.
+
+#+BEGIN_SRC R :session *ssh-midway* :results silent
+  cat(
+    urls, file= "urls",
+    sep= "\n", append= TRUE)  
+#+END_SRC
+
+
+Copy the file list to Midway.
+
+#+BEGIN_SRC sh :results silent
+  scp -q urls midway:/project/joshuaelliott/narr
+#+END_SRC
+
+#+BEGIN_SRC sh
+  ssh midway screen -d -m -S narr
+  ssh midway screen -S narr -X zombie ko
+  ssh midway screen -S narr -X screen \
+      wget  --no-verbose --recursive --no-clobber --retr-symlinks \
+      --force-directories --no-host-directories --directory-prefix /project/joshuaelliott/narr/data/grb --cut-dirs=2 \
+      --input-file=/project/joshuaelliott/narr/urls --accept "narr-a*.grb"
+#+END_SRC
+
+After 201208 there are no monthly folders on the server so we have to
+move some files around to get a uniform directory structure.
+
+#+BEGIN_SRC sh :session *ssh-midway*
+mkdir -v data/grb/2012{09,10,11}
+find data/grb -regex 'data/grb/2012\(09\|1[01]\)../.*?grb$' > dailyDirs.txt
+perl -ne 'chomp; m#^(data/grb/2012..)#; print "mv $_ $1\n";' dailyDirs.txt | bash
+find data/grb -type d -empty -delete
+rm dailyDirs.txt 
+#+END_SRC
+
+Make a list of all .grb input files for Swift initialization.
+
+#+BEGIN_SRC sh :session *ssh-midway*
+
+#+END_SRC
+* Identify the variables of interest
+
+#+NAME:variables
+#+BEGIN_SRC sh :session *ssh-midway* :results output raw
+  echo "|band|name|height|description|"
+  echo "|-"
+  egrep "^(288|380|389|406)" data/197901/narr-a_221_19790101_0000_000.inv | cut -d: -f 1,4,5,9 | perl -pe 's/:"?/|/g; s/^/|/; s/$/|/'
+#+END_SRC
+
+#+RESULTS: variables
+| band | name  | height        | description                               |
+|------+-------+---------------+-------------------------------------------|
+|  288 | TMP   | 2 m above gnd | Temp. [K]                                 |
+|  380 | APCP  | sfc           | Total precipitation [kg/m^2]              |
+|  389 | CRAIN | sfc           | Categorical rain [yes=1;no=0]             |
+|  406 | DSWRF | sfc           | Downward shortwave radiation flux [W/m^2] |
+
+
+
+* Perform the transformation manually to get it right
+** TODO Create/test remote directories
+   grb2, nc
+
+** Convert to GRIB2 format
+
+#+BEGIN_SRC sh :dir /midway:/project/joshuaelliott/narr
+  mkdir -p data/grb2/197901
+  for hour in 00 03 06 09 12 15 18 21; do
+        cnvgrib -g12 -nv \
+            data/grb/197901/narr-a_221_19790101_${hour}00_000.grb \
+            data/grb2/197901/narr-a_221_19790101_${hour}00_000.grb2
+  done  
+#+END_SRC
+
+#+RESULTS:
+
+** Extract the variables of interest
+
+#+BEGIN_SRC sh :results silent :dir /midway:/project/joshuaelliott/narr
+  mkdir -p data/nc/197901
+  for hour in 00 03 06 09 12 15 18 21; do
+      wgrib2 data/grb2/197901/narr-a_221_19790101_${hour}00_000.grb2 \
+          -match ':(TMP:2 m|APCP:|CRAIN:|DSWRF:)' \
+          -new_grid_winds earth -new_grid_interpolation neighbor \
+          -new_grid latlon 220.041666666666:960:0.083333333333 20.041666666666:480:0.0833333333333 - \
+          | wgrib2 - -order we:sn -nc3 -nc_table nc_table \
+          -netcdf data/nc/197901/narr-a_221_19790101_${hour}00_000.nc
+  done
+  
+#+END_SRC
+
+Can use '-set_ext_name 0' instead of -nc_table.
+
+
+** Merge into a daily file
+
+#+BEGIN_SRC sh
+  SKIP_SAME_TIME=1 cdo mergetime \
+      $(find nc -type f -name narr-a_221_19790101_*00_000.nc) \
+      nc/197901/narr-a_221_19790101.nc
+  
+#+END_SRC
+
+** Aggregate
+
+#+BEGIN_SRC sh
+  cdo daymin -selname,TMP_2maboveground nc/197901/narr-a_221_19790101.nc nc/197901/narr-a_221_19790101_tmin.nc
+  cdo daymax -selname,TMP_2maboveground nc/197901/narr-a_221_19790101.nc nc/197901/narr-a_221_19790101_tmax.nc
+  
+  
+  
+#+END_SRC
+
+
+#+BEGIN_SRC sh :dir /midway:~
+echo "Executed by `whoami` on `hostname` in `pwd`"
+#+END_SRC
+
+#+RESULTS:
+: Executed by nbest on lep in /Users/nbest
+
+#+BEGIN_SRC sh :session *ssh-midway*
+echo "Executed by `whoami` on `hostname` in `pwd`"
+#+END_SRC
+
+#+RESULTS:
+: Executed by nbest on midway-login1 in /project/joshuaelliott/narr
+
+
+#+BEGIN_SRC sh :session *ssh-midway*
+module list
+#+END_SRC
+
+#+RESULTS:
+| Currently | Loaded         | Modulefiles: |
+|        1) | slurm/2.4      |              |
+|        2) | vim/7.3        |              |
+|        3) | subversion/1.6 |              |
+|        4) | emacs/23.4     |              |
+|        5) | env/rcc        |              |
+|        6) | git/1.7        |              |
+|        7) | R/2.15         |              |
+|        8) | hdf5/1.8       |              |
+|        9) | netcdf/4.2     |              |
+|       10) | postgresql/9.2 |              |
+|       11) | proj/4.8       |              |
+|       12) | gdal/1.9       |              |
+|       13) | jasper/1.900   |              |
+|       14) | cnvgrib/1.4    |              |
+|       15) | wgrib2/0.1     |              |
+|       16) | java/1.7       |              |
+
