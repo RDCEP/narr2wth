@@ -141,9 +141,10 @@ rm dailyDirs.txt
 
 Make a list of all .grb input files for Swift initialization.
 
-#+BEGIN_SRC sh :session *ssh-midway*
-
+#+BEGIN_SRC sh :session *ssh-midway* :results silent
+find data/grb -type f -name *.grb > grbFiles.txt
 #+END_SRC
+
 * Identify the variables of interest
 
 #+NAME:variables
@@ -197,26 +198,55 @@ Make a list of all .grb input files for Swift initialization.
 
 Can use '-set_ext_name 0' instead of -nc_table.
 
+** Get rid of the empty second time step added by wgrib2
 
-** Merge into a daily file
-
-#+BEGIN_SRC sh
-  SKIP_SAME_TIME=1 cdo mergetime \
-      $(find nc -type f -name narr-a_221_19790101_*00_000.nc) \
-      nc/197901/narr-a_221_19790101.nc
-  
+#+BEGIN_SRC sh :session *ssh-midway*
+  cdo seltimestep,1 \
+      data/nc/197901/narr-a_221_19790101_0000_000.nc \
+      data/nc/197901/narr-a_221_19790101_0000_000.single.nc
 #+END_SRC
 
-** Aggregate
+** Merge and aggregate
 
-#+BEGIN_SRC sh
-  cdo daymin -selname,TMP_2maboveground nc/197901/narr-a_221_19790101.nc nc/197901/narr-a_221_19790101_tmin.nc
-  cdo daymax -selname,TMP_2maboveground nc/197901/narr-a_221_19790101.nc nc/197901/narr-a_221_19790101_tmax.nc
-  
-  
-  
+*** Merge into a monthly file
+
+#+BEGIN_SRC sh :session *ssh-midway* :results output verbatim
+  cdo -O mergetime \
+      $(find data/nc/197901 -type f -name narr-a_221_197901*00_000.single.nc) \
+      data/nc/197901.nc
 #+END_SRC
 
+#+RESULTS:
+: 
+: > cdo mergetime: Processed 457113600 values from 992 variables over 248 timesteps ( 11.87s )
+
+*** Aggregate
+
+#+BEGIN_SRC sh :session *ssh-midway* :results output verbatim
+  cdo daymin -selname,TMP data/nc/197901.nc data/nc/197901_tmin.nc
+  cdo daymax -selname,TMP data/nc/197901.nc data/nc/197901_tmax.nc
+  cdo daysum -selname,APCP data/nc/197901.nc data/nc/197901_precip.nc
+  cdo daymean -selname,DSWRF data/nc/197901.nc data/nc/197901_solar.nc
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+cdo daymin: Started child process "selname,TMP data/nc/197901.nc (pipe1.1)".
+cdo(2) selname: Processed 114278400 values from 4 variables over 248 timesteps ( 2.86s )
+cdo daymin: Processed 114278400 values from 1 variable over 248 timesteps ( 2.86s )
+cdo daymax: Started child process "selname,TMP data/nc/197901.nc (pipe1.1)".
+cdo(2) selname: Processed 114278400 values from 4 variables over 248 timesteps ( 2.96s )
+cdo daymax: Processed 114278400 values from 1 variable over 248 timesteps ( 2.96s )
+cdo daysum: Started child process "selname,APCP data/nc/197901.nc (pipe1.1)".
+cdo(2) selname: Processed 114278400 values from 4 variables over 248 timesteps ( 4.83s )
+cdo daysum: Processed 114278400 values from 1 variable over 248 timesteps ( 4.83s )
+cdo daymean: Started child process "selname,DSWRF data/nc/197901.nc (pipe1.1)".
+cdo(2) selname: Processed 114278400 values from 4 variables over 248 timesteps ( 5.12s )
+cdo daymean: Processed 114278400 values from 1 variable over 248 timesteps ( 5.12s )
+#+end_example
+
+
+** Testing remote execution
 
 #+BEGIN_SRC sh :dir /midway:~
 echo "Executed by `whoami` on `hostname` in `pwd`"
@@ -232,27 +262,4 @@ echo "Executed by `whoami` on `hostname` in `pwd`"
 #+RESULTS:
 : Executed by nbest on midway-login1 in /project/joshuaelliott/narr
 
-
-#+BEGIN_SRC sh :session *ssh-midway*
-module list
-#+END_SRC
-
-#+RESULTS:
-| Currently | Loaded         | Modulefiles: |
-|        1) | slurm/2.4      |              |
-|        2) | vim/7.3        |              |
-|        3) | subversion/1.6 |              |
-|        4) | emacs/23.4     |              |
-|        5) | env/rcc        |              |
-|        6) | git/1.7        |              |
-|        7) | R/2.15         |              |
-|        8) | hdf5/1.8       |              |
-|        9) | netcdf/4.2     |              |
-|       10) | postgresql/9.2 |              |
-|       11) | proj/4.8       |              |
-|       12) | gdal/1.9       |              |
-|       13) | jasper/1.900   |              |
-|       14) | cnvgrib/1.4    |              |
-|       15) | wgrib2/0.1     |              |
-|       16) | java/1.7       |              |
 
