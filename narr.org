@@ -263,3 +263,258 @@ echo "Executed by `whoami` on `hostname` in `pwd`"
 : Executed by nbest on midway-login1 in /project/joshuaelliott/narr
 
 
+
+** Processing errors
+   :PROPERTIES:
+   :session:  *ssh-midway*
+   :END:
+
+Running the stage that copies the first time step of the wgrib2
+output to the *.single.nc files produced 22 errors.  
+
+#+NAME: swiftErrors
+#+BEGIN_EXAMPLE
+1. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200505/narr-a_221_20050523_0000_000.nc, data/nc/200505/narr-a_221_20050523_0000_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/7/cdo-7cieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200505/narr-a_221_20050523_0000_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200505/narr-a_221_20050523_0000_000.single.nc
+2. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200509/narr-a_221_20050922_2100_000.nc, data/nc/200509/narr-a_221_20050922_2100_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/k/cdo-k37eex1l
+Caused by:
+        File not found: /project/joshuaelliott/narr/./data/nc/200509/narr-a_221_20050922_2100_000.nc
+3. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200605/narr-a_221_20060503_0000_000.nc, data/nc/200605/narr-a_221_20060503_0000_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/a/cdo-a3aeex1l
+Caused by:
+        File not found: /project/joshuaelliott/narr/./data/nc/200605/narr-a_221_20060503_0000_000.nc
+4. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200403/narr-a_221_20040326_0000_000.nc, data/nc/200403/narr-a_221_20040326_0000_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/i/cdo-irceex1l
+Caused by:
+        File not found: /project/joshuaelliott/narr/./data/nc/200403/narr-a_221_20040326_0000_000.nc
+5. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200505/narr-a_221_20050524_0900_000.nc, data/nc/200505/narr-a_221_20050524_0900_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/m/cdo-mfieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200505/narr-a_221_20050524_0900_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200505/narr-a_221_20050524_0900_000.single.nc
+6. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200505/narr-a_221_20050527_0300_000.nc, data/nc/200505/narr-a_221_20050527_0300_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/7/cdo-7eieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200505/narr-a_221_20050527_0300_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200505/narr-a_221_20050527_0300_000.single.nc
+7. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200506/narr-a_221_20050610_1200_000.nc, data/nc/200506/narr-a_221_20050610_1200_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/z/cdo-z7ieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200506/narr-a_221_20050610_1200_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200506/narr-a_221_20050610_1200_000.single.nc
+8. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200505/narr-a_221_20050516_0600_000.nc, data/nc/200505/narr-a_221_20050516_0600_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/s/cdo-sbieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200505/narr-a_221_20050516_0600_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200505/narr-a_221_20050516_0600_000.single.nc
+9. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200603/narr-a_221_20060304_0000_000.nc, data/nc/200603/narr-a_221_20060304_0000_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/j/cdo-jz8eex1l
+Caused by:
+        File not found: /project/joshuaelliott/narr/./data/nc/200603/narr-a_221_20060304_0000_000.nc
+10. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200506/narr-a_221_20050615_0900_000.nc, data/nc/200506/narr-a_221_20050615_0900_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/n/cdo-n8ieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200506/narr-a_221_20050615_0900_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200506/narr-a_221_20050615_0900_000.single.nc
+11. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200505/narr-a_221_20050531_2100_000.nc, data/nc/200505/narr-a_221_20050531_2100_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/s/cdo-sfieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200505/narr-a_221_20050531_2100_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200505/narr-a_221_20050531_2100_000.single.nc
+12. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200507/narr-a_221_20050709_0000_000.nc, data/nc/200507/narr-a_221_20050709_0000_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/r/cdo-riieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200507/narr-a_221_20050709_0000_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200507/narr-a_221_20050709_0000_000.single.nc
+13. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200603/narr-a_221_20060308_0000_000.nc, data/nc/200603/narr-a_221_20060308_0000_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/9/cdo-919eex1l
+Caused by:
+        File not found: /project/joshuaelliott/narr/./data/nc/200603/narr-a_221_20060308_0000_000.nc
+14. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200506/narr-a_221_20050616_2100_000.nc, data/nc/200506/narr-a_221_20050616_2100_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/v/cdo-v8ieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200506/narr-a_221_20050616_2100_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200506/narr-a_221_20050616_2100_000.single.nc
+15. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200506/narr-a_221_20050613_2100_000.nc, data/nc/200506/narr-a_221_20050613_2100_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/e/cdo-e9ieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200506/narr-a_221_20050613_2100_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200506/narr-a_221_20050613_2100_000.single.nc
+16. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200506/narr-a_221_20050616_0600_000.nc, data/nc/200506/narr-a_221_20050616_0600_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/6/cdo-69ieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200506/narr-a_221_20050616_0600_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200506/narr-a_221_20050616_0600_000.single.nc
+17. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200505/narr-a_221_20050526_0000_000.nc, data/nc/200505/narr-a_221_20050526_0000_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/l/cdo-leieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200505/narr-a_221_20050526_0000_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200505/narr-a_221_20050526_0000_000.single.nc
+18. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200506/narr-a_221_20050609_0300_000.nc, data/nc/200506/narr-a_221_20050609_0300_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/s/cdo-s7ieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200506/narr-a_221_20050609_0300_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200506/narr-a_221_20050609_0300_000.single.nc
+19. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200506/narr-a_221_20050615_0000_000.nc, data/nc/200506/narr-a_221_20050615_0000_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/t/cdo-t8ieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200506/narr-a_221_20050615_0000_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200506/narr-a_221_20050615_0000_000.single.nc
+20. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200506/narr-a_221_20050613_0600_000.nc, data/nc/200506/narr-a_221_20050613_0600_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/k/cdo-k9ieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200506/narr-a_221_20050613_0600_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200506/narr-a_221_20050613_0600_000.single.nc
+21. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200505/narr-a_221_20050529_1500_000.nc, data/nc/200505/narr-a_221_20050529_1500_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/r/cdo-rgieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200505/narr-a_221_20050529_1500_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200505/narr-a_221_20050529_1500_000.single.nc
+22. Exception in cdo:
+    Arguments: [seltimestep,1, data/nc/200506/narr-a_221_20050614_1800_000.nc, data/nc/200506/narr-a_221_20050614_1800_000.single.nc]
+    Host: cluster
+    Directory: narr-20121205-0003-agtvuf28/jobs/s/cdo-s9ieex1l
+    stderr.txt: cdo seltimestep: Open failed on >data/nc/200506/narr-a_221_20050614_1800_000.nc<
+Unsupported file type
+    stdout.txt:
+Caused by:
+        The following output files were not created by the application: data/nc/200506/narr-a_221_20050614_1800_000.single.nc
+#+END_EXAMPLE
+
+*** TODO Report Org-mode bug of lost line termination
+
+#+NAME: filterBadFiles( swiftErrors= swiftErrors)
+#+BEGIN_SRC sh :eval no
+  perl -ne 'print "$1\n" if />([^<]+)</' swiftErrors.txt | sort
+  
+#+END_SRC
+
+*** TODO Report bug of remote execution and results from ssh.el buffer 
+
+#+RESULTS: filterBadFiles
+
+#+NAME:: filterBadFilesManual
+#+BEGIN_EXAMPLE
+data/nc/200505/narr-a_221_20050516_0600_000.nc
+data/nc/200505/narr-a_221_20050523_0000_000.nc
+data/nc/200505/narr-a_221_20050524_0900_000.nc
+data/nc/200505/narr-a_221_20050526_0000_000.nc
+data/nc/200505/narr-a_221_20050527_0300_000.nc
+data/nc/200505/narr-a_221_20050529_1500_000.nc
+data/nc/200505/narr-a_221_20050531_2100_000.nc
+data/nc/200506/narr-a_221_20050609_0300_000.nc
+data/nc/200506/narr-a_221_20050610_1200_000.nc
+data/nc/200506/narr-a_221_20050613_0600_000.nc
+data/nc/200506/narr-a_221_20050613_2100_000.nc
+data/nc/200506/narr-a_221_20050614_1800_000.nc
+data/nc/200506/narr-a_221_20050615_0000_000.nc
+data/nc/200506/narr-a_221_20050615_0900_000.nc
+data/nc/200506/narr-a_221_20050616_0600_000.nc
+data/nc/200506/narr-a_221_20050616_2100_000.nc
+data/nc/200507/narr-a_221_20050709_0000_000.nc
+#+END_EXAMPLE
+
+Some of these were due to empty .nc files.
+
+#+NAME: emptyNc
+#+BEGIN_SRC sh
+find data/nc -size 0 | sort
+#+END_SRC
+
+#+RESULTS: emptyNc
+| data/nc/200505/narr-a_221_20050516_0600_000.nc |
+| data/nc/200505/narr-a_221_20050523_0000_000.nc |
+| data/nc/200505/narr-a_221_20050524_0900_000.nc |
+| data/nc/200505/narr-a_221_20050526_0000_000.nc |
+| data/nc/200505/narr-a_221_20050527_0300_000.nc |
+| data/nc/200505/narr-a_221_20050529_1500_000.nc |
+| data/nc/200505/narr-a_221_20050531_2100_000.nc |
+| data/nc/200506/narr-a_221_20050609_0300_000.nc |
+| data/nc/200506/narr-a_221_20050610_1200_000.nc |
+| data/nc/200506/narr-a_221_20050613_0600_000.nc |
+| data/nc/200506/narr-a_221_20050613_2100_000.nc |
+| data/nc/200506/narr-a_221_20050614_1800_000.nc |
+| data/nc/200506/narr-a_221_20050615_0000_000.nc |
+| data/nc/200506/narr-a_221_20050615_0900_000.nc |
+| data/nc/200506/narr-a_221_20050616_0600_000.nc |
+| data/nc/200506/narr-a_221_20050616_2100_000.nc |
+| data/nc/200507/narr-a_221_20050709_0000_000.nc |
+
