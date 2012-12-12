@@ -1,0 +1,3 @@
+[submodule "wth_gen"]
+	path = wth_gen
+	url = git@github.com:RDCEP/wth_gen.git
