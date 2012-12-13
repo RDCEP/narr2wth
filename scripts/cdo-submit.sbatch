@@ -18,6 +18,4 @@ module load cdo  #Load any mondules you need to run here
 
 #### Uncomment / Change below to run your actions
 
-cdo -f nc4 -O mergetime $(find data/nc/${year}* -type f -name narr-a_221_*00_000.single.nc) ${annual_file}
-
-
+cdo -f nc4 -O mergetime $(find data/nc/${year}* -type f -name narr-a_221_*00_000.${step}.nc) ${annual_file}
