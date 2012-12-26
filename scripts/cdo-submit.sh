@@ -4,7 +4,8 @@
 
 printf "Submitting :: %10s | %+10s | %10s | %10s | %s\n"\
   "<job name>" "<output file> " "<error file>  " "<sbatch file>  " "<job id>"
-for year in {1979..2012};
+#for year in {1979..2012};
+for year in 2012;
 do
     for step in 1 2;
     do

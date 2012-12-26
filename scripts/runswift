@@ -4,6 +4,5 @@ set -x
 
 genapplist >applist
 
-# find data/grb -type f -name *.grb > grbFiles.txt
 
-swift -config config -tc.file applist -sites.file sites.xml $*
+swift -config config -tc.file applist $*
