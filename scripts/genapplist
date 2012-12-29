@@ -4,6 +4,6 @@ cluster wgrib2		$(which wgrib2)		null	null	null
 cluster cdo		$(which cdo)		null	null	null
 cluster sh		$(which sh)		null	null	null
 #cluster nc_wth_gen      /project/joshuaelliott/narr/wth_gen/nc_wth_gen	null	null	null
-westmere  nc_wth_gen	/project/joshuaelliott/narr/ncWthGenYear.R	null	null	null
-sandyb	  nc_wth_gen 	/project/joshuaelliott/narr/ncWthGenYear.R	null	null	null
+westmere  nc_wth_gen	/project/joshuaelliott/narr/ncWthGenYear.r	null	null	null
+#sandyb	  nc_wth_gen 	/project/joshuaelliott/narr/ncWthGenYear.r	null	null	null
 END
