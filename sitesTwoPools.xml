@@ -1,0 +1,69 @@
+
+<config>
+
+<pool handle="local">
+
+  <execution provider="local"/>
+  <profile namespace="karajan" key="jobThrottle">0.03</profile>
+  <profile namespace="karajan" key="initialScore">10000</profile>
+  <filesystem provider="local" url="none" />
+  <workdirectory>/project/joshuaelliott/narr/wilde/swiftwork</workdirectory>
+
+</pool>
+
+<pool handle="westmere">
+
+  <execution provider="coaster" jobmanager="local:slurm" url="localhost:1"/>
+
+  <profile namespace="globus" key="jobsPerNode">12</profile>
+  <profile namespace="globus" key="ppn">12</profile>
+  <profile namespace="globus" key="slots">20</profile>
+  <profile namespace="globus" key="maxnodes">1</profile>
+  <profile namespace="globus" key="nodegranularity">1</profile>
+  <profile namespace="globus" key="queue">westmere</profile>
+
+  <!-- <profile namespace="globus" key="providerAttributes">slurm.resource_list=advres=swift</profile> -->
+
+  <profile namespace="karajan" key="jobThrottle">3.99</profile>
+  <profile namespace="karajan" key="initialScore">10000</profile>
+
+  <profile namespace="globus" key="highOverAllocation">100</profile>
+  <profile namespace="globus" key="lowOverAllocation">100</profile>
+  <profile namespace="globus" key="maxtime">2000</profile>
+  <profile namespace="globus" key="maxwalltime">00:04:00</profile>
+
+  <filesystem provider="local" url="none" />
+  <workdirectory>/project/joshuaelliott/narr/swiftwork/</workdirectory>
+  <!-- <workdirectory>/scratch/local/nbest/</workdirectory> -->
+
+</pool>
+
+<pool handle="sandyb">
+
+  <execution provider="coaster" jobmanager="local:slurm" url="localhost:2"/>
+
+  <profile namespace="globus" key="jobsPerNode">16</profile>
+  <profile namespace="globus" key="ppn">16</profile>
+  <profile namespace="globus" key="slots">20</profile>
+  <profile namespace="globus" key="maxnodes">1</profile>
+  <profile namespace="globus" key="nodegranularity">1</profile>
+  <profile namespace="globus" key="queue">sandyb</profile>
+
+  <!-- <profile namespace="globus" key="providerAttributes">slurm.resource_list=advres=swift</profile> -->
+
+  <profile namespace="karajan" key="jobThrottle">3.99</profile>
+  <profile namespace="karajan" key="initialScore">10000</profile>
+
+  <profile namespace="globus" key="highOverAllocation">100</profile>
+  <profile namespace="globus" key="lowOverAllocation">100</profile>
+  <profile namespace="globus" key="maxtime">2000</profile>
+  <profile namespace="globus" key="maxwalltime">00:04:00</profile>
+
+  <filesystem provider="local" url="none" />
+  <workdirectory>/project/joshuaelliott/narr/swiftwork/</workdirectory>
+  <!-- <workdirectory>/scratch/local/nbest/</workdirectory> -->
+
+</pool>
+
+</config>
+
