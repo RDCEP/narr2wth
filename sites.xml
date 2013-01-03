@@ -3,8 +3,8 @@
 
     <execution provider="coaster" jobmanager="local:slurm"/>
 
-    <profile namespace="globus" key="jobsPerNode">12</profile>
-    <profile namespace="globus" key="ppn">12</profile>
+    <profile namespace="globus" key="jobsPerNode">1</profile>
+    <profile namespace="globus" key="ppn">1</profile>
     <profile namespace="globus" key="slots">20</profile>
     <profile namespace="globus" key="maxnodes">1</profile>
     <profile namespace="globus" key="nodegranularity">1</profile>
@@ -15,8 +15,8 @@
 
     <profile namespace="globus" key="highOverAllocation">100</profile>
     <profile namespace="globus" key="lowOverAllocation">100</profile>
-    <profile namespace="globus" key="maxtime">2000</profile>
-    <profile namespace="globus" key="maxwalltime">00:30:00</profile>
+    <profile namespace="globus" key="maxtime">8000</profile>
+    <profile namespace="globus" key="maxwalltime">02:00:00</profile>
 
     <filesystem provider="local" url="none" />
     <workdirectory>/project/joshuaelliott/narr/swiftwork</workdirectory>

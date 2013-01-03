@@ -37,7 +37,7 @@ Now we can be reasonably sure that it doesn't matter what directory we take the 
 
 Compose the URLs.
 
-#+BEGIN_SRC R :session *ssh-midway* :results silent
+#+BEGIN_SRC R :session *R* :results silent
   baseUrl <- "ftp://nomads.ncdc.noaa.gov/NARR"
   
   narrMonths <-
@@ -75,12 +75,12 @@ Write the URLs to a file for wget to read.
 
 Files since 201208 do not have monthly subfolders.
 
-#+BEGIN_SRC R :session *ssh-midway* :results silent
+#+BEGIN_SRC R :session *R* :results silent
   
   narrDays <-
     seq(
-      as.Date( "2012-09-01"),
       as.Date( "2012-11-30"),
+      as.Date( "2012-12-08"),
       by= "day")
   
   urls <- paste(
@@ -92,57 +92,60 @@ Files since 201208 do not have monthly subfolders.
 
 Examine a sample of the resulting URLs.
 
-#+BEGIN_SRC R :session *ssh-midway*
-  head( urls)
+#+BEGIN_SRC R :session *R*
+  urls
 #+END_SRC
 
 #+RESULTS:
-| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120901 |
-| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120902 |
-| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120903 |
-| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120904 |
-| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120905 |
-| ftp://nomads.ncdc.noaa.gov/NARR/201209/20120906 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201211/20121130 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201212/20121201 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201212/20121202 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201212/20121203 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201212/20121204 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201212/20121205 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201212/20121206 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201212/20121207 |
+| ftp://nomads.ncdc.noaa.gov/NARR/201212/20121208 |
 
 Write the URLs to a file for wget to read.
 
-#+BEGIN_SRC R :session *ssh-midway* :results silent
+#+BEGIN_SRC R :session *R* :results silent
   cat(
     urls, file= "urls",
-    sep= "\n", append= TRUE)  
+    sep= "\n", append= FALSE)  
 #+END_SRC
 
-
-Copy the file list to Midway.
-
-#+BEGIN_SRC sh :results silent
-  scp -q urls midway:/project/joshuaelliott/narr
-#+END_SRC
 
 #+BEGIN_SRC sh
-  ssh midway screen -d -m -S narr
-  ssh midway screen -S narr -X zombie ko
-  ssh midway screen -S narr -X screen \
+  screen -d -m -S narr
+  screen -S narr -X zombie ko
+  screen -S narr -X screen \
       wget  --no-verbose --recursive --no-clobber --retr-symlinks \
       --force-directories --no-host-directories --directory-prefix /project/joshuaelliott/narr/data/grb --cut-dirs=2 \
       --input-file=/project/joshuaelliott/narr/urls --accept "narr-a*.grb"
 #+END_SRC
 
+#+RESULTS:
+
 After 201208 there are no monthly folders on the server so we have to
 move some files around to get a uniform directory structure.
 
-#+BEGIN_SRC sh :session *ssh-midway*
-mkdir -v data/grb/2012{09,10,11}
-find data/grb -regex 'data/grb/2012\(09\|1[01]\)../.*?grb$' > dailyDirs.txt
-perl -ne 'chomp; m#^(data/grb/2012..)#; print "mv $_ $1\n";' dailyDirs.txt | bash
-find data/grb -type d -empty -delete
-rm dailyDirs.txt 
+#+BEGIN_SRC sh
+  mkdir -v data/grb/2012{09,10,11,12}
+  find data/grb -regex 'data/grb/2012\(09\|1[012]\)../.*?grb$' > dailyDirs.txt
+  perl -ne 'chomp; m#^(data/grb/2012..)#; print "mv $_ $1\n";' dailyDirs.txt | bash
+  find data/grb -type d -empty -delete
+  rm dailyDirs.txt 
 #+END_SRC
 
 Make a list of all .grb input files for Swift initialization.
 
-#+BEGIN_SRC sh :session *ssh-midway* :results silent
-find data/grb -type f -name *.grb > grbFiles.txt
+#+BEGIN_SRC sh :results silent
+find data/grb -type f -name *.grb | sort > grbFiles.txt
+#+END_SRC
+
+#+BEGIN_SRC sh :results silent :eval no
+find data/grb/20121{1,2} -type f -name *.grb | sort > grbFiles.txt
 #+END_SRC
 
 * Identify the variables of interest
@@ -208,17 +211,71 @@ Can use '-set_ext_name 0' instead of -nc_table.
 
 ** Merge and aggregate
 
-*** Merge into a monthly file
+*** Merge into an annual file
 
-#+BEGIN_SRC sh :session *ssh-midway* :results output verbatim
+#+BEGIN_SRC sh :session *shell* :results output verbatim
   cdo -O mergetime \
-      $(find data/nc/197901 -type f -name narr-a_221_197901*00_000.single.nc) \
-      data/nc/197901.nc
+      $(find data/nc/1979* -type f -name narr-a_221_*00_000.single.nc) \
+      data/nc/annual/1979.nc
 #+END_SRC
 
 #+RESULTS:
 : 
-: > cdo mergetime: Processed 457113600 values from 992 variables over 248 timesteps ( 11.87s )
+: > cdo mergetime: Processed 5382144000 values from 11680 variables over 2920 timesteps ( 127.04s )
+
+Do the same through SLURM.
+
+#+BEGIN_SRC sh :session *shell* :results output verbatim
+  srun --partition=westmere --immediate=3600 cdo -O mergetime \
+      $(find data/nc/1980* -type f -name narr-a_221_*00_000.single.nc) \
+      data/nc/annual/1980.nc
+#+END_SRC
+
+#+BEGIN_SRC sh :session *shell* :results output verbatim
+  for year in {1981..2012}; do
+      srun --partition=westmere --immediate=3600 cdo mergetime \
+          $(find data/nc/${year}* -type f -name narr-a_221_*00_000.single.nc) \
+          data/nc/annual/${year}.nc &
+  done
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+
+> > > [2] 7186
+[3] 7187
+[4] 7188
+[5] 7190
+[6] 7192
+[7] 7194
+[8] 7196
+[9] 7198
+[10] 7200
+[11] 7202
+[12] 7204
+[13] 7206
+[14] 7208
+[15] 7210
+[16] 7212
+[17] 7214
+[18] 7215
+[19] 7218
+[20] 7220
+[21] 7222
+[22] 7224
+[23] 7226
+[24] 7228
+[25] 7230
+[26] 7231
+[27] 7234
+[28] 7238
+[29] 7240
+[30] 7242
+[31] 7244
+[32] 7246
+[33] 7248
+#+end_example
+
 
 *** Aggregate
 
@@ -263,11 +320,49 @@ echo "Executed by `whoami` on `hostname` in `pwd`"
 : Executed by nbest on midway-login1 in /project/joshuaelliott/narr
 
 
+#+BEGIN_SRC sh :session *shell* :results output verbatim
+echo "Executed by `whoami` on `hostname` in `pwd`"
+module list 2>&1
+which cdo
+#+END_SRC
+
+
+#+RESULTS:
+#+begin_example
+Executed by nbest on midway-login1 in /project/joshuaelliott/narr
+Currently Loaded Modulefiles:
+ 1) slurm/2.4      
+ 2) vim/7.3        
+ 3) subversion/1.6 
+ 4) env/rcc        
+ 5) git/1.7        
+ 6) R/2.15         
+ 7) hdf5/1.8       
+ 8) netcdf/4.2     
+ 9) postgresql/9.2 
+10) proj/4.8       
+11) gdal/1.9       
+12) jasper/1.900   
+13) cnvgrib/1.4    
+14) wgrib2/0.1     
+15) texinfo/4.13a  
+16) texlive/2012   
+17) grib_api/1.9   
+18) cdo/1.5        
+19) java/1.7       
+20) emacs/23.4
+/software/cdo-1.5-el6-x86_64/bin/cdo
+#+end_example
+
+#+BEGIN_SRC sh :results output verbatim
+echo "Executed by `whoami` on `hostname` in `pwd`"
+module list 2>&1
+which cdo
+#+END_SRC
+
+#+RESULTS:
 
 ** Processing errors
-   :PROPERTIES:
-   :session:  *ssh-midway*
-   :END:
 
 Running the stage that copies the first time step of the wgrib2
 output to the *.single.nc files produced 22 errors.  
@@ -461,36 +556,40 @@ Caused by:
 
 *** TODO Report Org-mode bug of lost line termination
 
-#+NAME: filterBadFiles( swiftErrors= swiftErrors)
-#+BEGIN_SRC sh :eval no
-  perl -ne 'print "$1\n" if />([^<]+)</' swiftErrors.txt | sort
-  
+        File not found: /project/joshuaelliott/narr/./data/nc/200509/narr-a_221_20050922_2100_000.nc
+
+#+NAME: filterBadFiles
+#+BEGIN_SRC sh :value verbatim output
+  ( \
+      perl -ne 'print "$1\n" if m#File not found: /project/joshuaelliott/narr/./([^\s]+)$#' swiftErrors.txt && \
+      perl -ne 'print "$1\n" if />([^<]+)</' swiftErrors.txt ) | sort  
 #+END_SRC
 
-*** TODO Report bug of remote execution and results from ssh.el buffer 
 
 #+RESULTS: filterBadFiles
+| data/nc/200403/narr-a_221_20040326_0000_000.nc |
+| data/nc/200505/narr-a_221_20050516_0600_000.nc |
+| data/nc/200505/narr-a_221_20050523_0000_000.nc |
+| data/nc/200505/narr-a_221_20050524_0900_000.nc |
+| data/nc/200505/narr-a_221_20050526_0000_000.nc |
+| data/nc/200505/narr-a_221_20050527_0300_000.nc |
+| data/nc/200505/narr-a_221_20050529_1500_000.nc |
+| data/nc/200505/narr-a_221_20050531_2100_000.nc |
+| data/nc/200506/narr-a_221_20050609_0300_000.nc |
+| data/nc/200506/narr-a_221_20050610_1200_000.nc |
+| data/nc/200506/narr-a_221_20050613_0600_000.nc |
+| data/nc/200506/narr-a_221_20050613_2100_000.nc |
+| data/nc/200506/narr-a_221_20050614_1800_000.nc |
+| data/nc/200506/narr-a_221_20050615_0000_000.nc |
+| data/nc/200506/narr-a_221_20050615_0900_000.nc |
+| data/nc/200506/narr-a_221_20050616_0600_000.nc |
+| data/nc/200506/narr-a_221_20050616_2100_000.nc |
+| data/nc/200507/narr-a_221_20050709_0000_000.nc |
+| data/nc/200509/narr-a_221_20050922_2100_000.nc |
+| data/nc/200603/narr-a_221_20060304_0000_000.nc |
+| data/nc/200603/narr-a_221_20060308_0000_000.nc |
+| data/nc/200605/narr-a_221_20060503_0000_000.nc |
 
-#+NAME:: filterBadFilesManual
-#+BEGIN_EXAMPLE
-data/nc/200505/narr-a_221_20050516_0600_000.nc
-data/nc/200505/narr-a_221_20050523_0000_000.nc
-data/nc/200505/narr-a_221_20050524_0900_000.nc
-data/nc/200505/narr-a_221_20050526_0000_000.nc
-data/nc/200505/narr-a_221_20050527_0300_000.nc
-data/nc/200505/narr-a_221_20050529_1500_000.nc
-data/nc/200505/narr-a_221_20050531_2100_000.nc
-data/nc/200506/narr-a_221_20050609_0300_000.nc
-data/nc/200506/narr-a_221_20050610_1200_000.nc
-data/nc/200506/narr-a_221_20050613_0600_000.nc
-data/nc/200506/narr-a_221_20050613_2100_000.nc
-data/nc/200506/narr-a_221_20050614_1800_000.nc
-data/nc/200506/narr-a_221_20050615_0000_000.nc
-data/nc/200506/narr-a_221_20050615_0900_000.nc
-data/nc/200506/narr-a_221_20050616_0600_000.nc
-data/nc/200506/narr-a_221_20050616_2100_000.nc
-data/nc/200507/narr-a_221_20050709_0000_000.nc
-#+END_EXAMPLE
 
 Some of these were due to empty .nc files.
 
@@ -517,4 +616,138 @@ find data/nc -size 0 | sort
 | data/nc/200506/narr-a_221_20050616_0600_000.nc |
 | data/nc/200506/narr-a_221_20050616_2100_000.nc |
 | data/nc/200507/narr-a_221_20050709_0000_000.nc |
+
+
+Use this list to write a new list of .grb files to initialize Swift.
+
+
+#+NAME grbFiles
+#+BEGIN_SRC sh :noweb yes
+<<filterBadFiles>>  | perl -pe "s/nc/grb/g" | tee grbFilesRedo.txt
+#+END_SRC
+
+#+RESULTS:
+| data/grb/200403/narr-a_221_20040326_0000_000.grb |
+| data/grb/200505/narr-a_221_20050516_0600_000.grb |
+| data/grb/200505/narr-a_221_20050523_0000_000.grb |
+| data/grb/200505/narr-a_221_20050524_0900_000.grb |
+| data/grb/200505/narr-a_221_20050526_0000_000.grb |
+| data/grb/200505/narr-a_221_20050527_0300_000.grb |
+| data/grb/200505/narr-a_221_20050529_1500_000.grb |
+| data/grb/200505/narr-a_221_20050531_2100_000.grb |
+| data/grb/200506/narr-a_221_20050609_0300_000.grb |
+| data/grb/200506/narr-a_221_20050610_1200_000.grb |
+| data/grb/200506/narr-a_221_20050613_0600_000.grb |
+| data/grb/200506/narr-a_221_20050613_2100_000.grb |
+| data/grb/200506/narr-a_221_20050614_1800_000.grb |
+| data/grb/200506/narr-a_221_20050615_0000_000.grb |
+| data/grb/200506/narr-a_221_20050615_0900_000.grb |
+| data/grb/200506/narr-a_221_20050616_0600_000.grb |
+| data/grb/200506/narr-a_221_20050616_2100_000.grb |
+| data/grb/200507/narr-a_221_20050709_0000_000.grb |
+| data/grb/200509/narr-a_221_20050922_2100_000.grb |
+| data/grb/200603/narr-a_221_20060304_0000_000.grb |
+| data/grb/200603/narr-a_221_20060308_0000_000.grb |
+| data/grb/200605/narr-a_221_20060503_0000_000.grb |
+
+
+* Fake extra data to finish the time series
+
+This approach was flawed because the metadata within the linked files
+will throw off the subsequent steps, i.e. cdo mergetime.
+
+#+BEGIN_SRC R :session *R* :eval no
+  
+  ## file.symlink(
+  ##   to= "data/nc/201212/narr-a_221_20121231_2100_000.1.nc",
+  ##   from="data/nc/201112/narr-a_221_20111231_2100_000.1.nc")
+  
+  fakeThreeHours <-
+    seq(
+      ISOdate( 2012,12,9, hour= 0),
+      ISOdate( 2012,12,31, hour= 21),    
+      by= "3 hours")
+  
+  oneYearEarlier <- {
+    foo <- as.POSIXlt( fakeThreeHours)
+    foo$year <- foo$year -1
+    as.POSIXct( foo)
+  }
+  
+  pathToTimeStep <- function( date, step) {
+    sprintf(
+      "%s/narr-a_221_%s_000.%d.nc",
+      format( date, "%Y%m"),
+      format( date, "%Y%m%d_%H%M"),
+      step)
+  }
+  
+  linkTo <-
+    paste(
+      "data/nc",
+      c(
+        pathToTimeStep( fakeThreeHours, 1),
+        pathToTimeStep( fakeThreeHours, 2)),
+      sep= "/")
+  
+  linkFrom <-
+    paste(
+      "..",
+      c(
+        pathToTimeStep( oneYearEarlier, 1),
+        pathToTimeStep( oneYearEarlier, 2)),
+      sep= "/")
+  
+  ## head( cbind( linkTo, linkFrom))
+  ## tail( cbind( linkTo, linkFrom))
+  
+  file.symlink(
+    to=   linkTo,
+    from= linkFrom)
+  
+  
+#+END_SRC
+
+#+BEGIN_SRC R :session *R*
+  
+  fakeThreeHours <-
+    seq(
+      ISOdate( 2012,12,9, hour= 0),
+      ISOdate( 2012,12,31, hour= 21),    
+      by= "3 hours")
+  
+  oneYearEarlier <- {
+    foo <- as.POSIXlt( fakeThreeHours)
+    foo$year <- foo$year -1
+    as.POSIXct( foo)
+  }
+  
+  pathToTimeStep <- function( date, step) {
+    sprintf(
+      "%s/narr-a_221_%s_000.%d.nc",
+      format( date, "%Y%m"),
+      format( date, "%Y%m%d_%H%M"),
+      step)
+  }
+  
+  outFile <-
+    paste(
+      "data/nc",
+      c(
+        pathToTimeStep( fakeThreeHours, 1),
+        pathToTimeStep( fakeThreeHours, 2)),
+      sep= "/")
+  
+  inFile <-
+    paste(
+      "data/nc",
+      c(
+        pathToTimeStep( oneYearEarlier, 1),
+        pathToTimeStep( oneYearEarlier, 2)),
+      sep= "/")
+  
+  
+  cat( inFile, file="oneYearEarlier.txt", sep= "\n")
+#+END_SRC
+
 

@@ -3,6 +3,8 @@
 library( raster, quietly= TRUE)
 library( ncdf4)
 
+ncArgs <- argv[ 1:4]
+names( ncArgs) <- c( "precip", "tmin", "tmax", "solar")
 
 precipFile <- argv[ 1]
 tminFile <- argv[ 2]
@@ -12,13 +14,49 @@ cell <- as.numeric( argv[ 5])
 
 ## wthFile <- args[ 6]
 
-## precipFile <- "data/nc/precip/precip_1979.nc"
-## tminFile <- "data/nc/tmin/tmin_1979.nc"
-## tmaxFile <- "data/nc/tmax/tmax_1979.nc"
-## solarFile <- "data/nc/solar/solar_1979.nc"
-## cell <- 2109179
+precipFile <- "data/nc/precip/precip_1979.nc"
+tminFile <- "data/nc/tmin/tmin_1979.nc"
+tmaxFile <- "data/nc/tmax/tmax_1979.nc"
+solarFile <- "data/nc/solar/solar_1979.nc"
+cell <- 2109179
 
 ## if( is.null( wthFile)) wthFile <- ""
+
+scratchDir <- "/scratch/local/nbest"
+
+copyToScratch <- function( ncFile, scratch= scratchDir) {
+  fn <- basename( ncFile)
+  ncCopy <- paste( scratch, fn, sep="/")
+  ncLock <- paste( ncCopy, "lock", sep=".")
+  if( !file.exists( scratch)) dir.create( scratch, recursive= TRUE)
+  if( file.exists( ncCopy)) {
+    if( file.exists( ncLock)) {
+      return( 0)
+    } else return( 1)
+  } else {
+    dd <- sprintf( "touch %s; dd if=%s of=%s bs=8M; rm %1$s",
+                  ncLock, ncFile, ncCopy)
+    system( dd, wait= FALSE)
+    return( 0)
+  }
+}
+
+ncFiles <-
+  c( precipFile, tminFile, tmaxFile, solarFile)
+done <- 0
+repeat {
+  done <-
+    sum(
+      sapply(
+        ncFiles,
+        copyToScratch))
+  if( done == 4) break else Sys.sleep( 3)
+}
+
+precipFile <- paste( scratchDir, basename( precipFile), sep= "/")
+tminFile <- paste( scratchDir, basename( tminFile), sep= "/")
+tmaxFile <- paste( scratchDir, basename( tmaxFile), sep= "/")
+solarFile <- paste( scratchDir, basename( solarFile), sep= "/")
 
 shiftYears <- -16
 
