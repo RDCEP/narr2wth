@@ -751,3 +751,221 @@ will throw off the subsequent steps, i.e. cdo mergetime.
 #+END_SRC
 
 
+* Data validation
+  :PROPERTIES:
+  :session:  *R*
+  :END:
+
+#+BEGIN_SRC R 
+  
+  library(raster)
+  world <- raster()
+  res( world) <- 5/60
+  
+  mooreTwp <- matrix( rev( c( 43.469722, -82.954167)), ncol=2)
+  
+  cell <- cellFromXY( world, xy= mooreTwp)
+  
+  date <- ISOdate( 1991, 5, 19, hour= 0)
+  
+  times <- seq( date, by= "3 hours", length.out= 8)
+  
+  ## data/grb/199105/narr-a_221_19910519_0000_000.grb
+  
+  grbFiles <-
+    sprintf(
+      "data/grb/%s/narr-a_221_%s_000.grb",
+      format( times, "%Y%m"),
+      format( times, "%Y%m%d_%H%M"))
+  
+  grbTmp <- stack( grbFiles, bands= c( 288))
+  grbApcp <- stack( grbFiles, bands= c( 380))
+  grbDswrf <- stack( grbFiles, bands= c( 406))
+  
+  tmp <- extract( grbTmp, project( mooreTwp, projection( grbTmp)))
+  apcp <- extract( grbApcp, project( mooreTwp, projection( grbApcp)))
+  dswrf <- extract( grbDswrf, project( mooreTwp, projection( grbDswrf)))
+  
+  
+  extractGrbRecord <- function( cellDateDf, grbDir= "data/grb") {
+    with( cellDateDf, {
+      xy <- xyFromCell( world, as.integer( cell))
+      times <- seq( as.POSIXlt( date), by= "3 hours", length.out= 8)
+      grbFiles <-
+        sprintf(
+          "%s/%s/narr-a_221_%s_000.grb",
+          grbDir,
+          format( times, "%Y%m"),
+          format( times, "%Y%m%d_%H%M"))
+      grbTmp <- stack( grbFiles, bands= c( 288))
+      grbApcp <- stack( grbFiles, bands= c( 380))
+      grbDswrf <- stack( grbFiles, bands= c( 406))
+      tmp <- extract( grbTmp, project( xy, projection( grbTmp)))
+      apcp <- extract( grbApcp, project( xy, projection( grbApcp)))
+      dswrf <- extract( grbDswrf, project( xy, projection( grbDswrf)))
+      data.frame(
+        cell= cell,
+        date= date,
+        srad= mean( dswrf) *86400 /1000000,
+        tmax= max( tmp),
+        tmin= min( tmp),
+        rain= sum( apcp))
+    })
+  }
+  
+  grbSample <-
+    melt( ddply( testCases, .(cell), extractGrbRecord),
+         id.vars= c( "cell", "date"))
+  
+#+END_SRC
+
+** check if 3-hour shift explains solar discrepancy
+
+#+BEGIN_SRC R
+  
+  date <- ISOdate( 1991, 5, 19, hour= 3)
+  times <- seq( date, by= "3 hours", length.out= 8)
+  grbFiles <-
+    sprintf(
+      "data/grb/%s/narr-a_221_%s_000.grb",
+      format( times, "%Y%m"),
+      format( times, "%Y%m%d_%H%M"))
+  grbDswrf <- stack( grbFiles, bands= c( 406))
+  dswrf <- extract( grbDswrf, project( mooreTwp, projection( grbDswrf)))
+  
+  date <- ISOdate( 1991, 5, 18, hour= 21)
+  times <- seq( date, by= "3 hours", length.out= 8)
+  grbFiles <-
+    sprintf(
+      "data/grb/%s/narr-a_221_%s_000.grb",
+      format( times, "%Y%m"),
+      format( times, "%Y%m%d_%H%M"))
+  grbDswrf <- stack( grbFiles, bands= c( 406))
+  dswrf <- extract( grbDswrf, project( mooreTwp, projection( grbDswrf)))
+  mean(dswrf)*86400 /1000000
+#+END_SRC
+
+
+** construct random vectors of dates and cell IDs
+
+#+BEGIN_SRC R
+  
+  testDates <- {
+    start <- as.Date( "1979-01-01")
+    end <- as.Date( "2012-12-31")
+    start + sample.int( end- start, 10)
+  }
+                     
+  allCells <- readLines( "data/grid_hwsd.txt")
+  testCells <- sample( allCells, 10)
+  
+  testCases <- data.frame(
+    cell= testCells,
+    date= testDates,
+    stringsAsFactors= FALSE)
+  
+  wthDf <- read.table(
+    "data/wth/248/2489215/GENERIC1.WTH",
+    skip= 4,
+    col.names= c("wthDate", "srad", "tmax", "tmin", "rain"))
+  
+  
+  extractWthRecord <- function( cell, date, wthDir= "data/wth", yearShift= 16) {
+    wthFile <- sprintf( "%s/%3.3s/%2$s/GENERIC1.WTH", wthDir, cell)
+    wthCols <-  c("wthDay", "srad", "tmax", "tmin", "rain")
+    wthDf <- read.table(
+      wthFile, skip= 4,
+      col.names= wthCols,
+      colClasses= c( wthDay= "character"))
+    wthDf <-
+      within( wthDf, {
+        year <- as.character(
+          as.integer( substr( wthDay, 1, 2))
+          + 1900 + yearShift)
+        dayOfYear <- substr( wthDay, 3, 5)
+        wthDate <- as.Date(
+          paste( year, dayOfYear, sep= ""),
+          format= "%Y%j")})
+    cbind(
+      cell= cell,
+      date= date,
+      with( wthDf, wthDf[ wthDate == date, wthCols[ -1]]))
+  }
+  
+  extractWthRecordDf <- function( cellDateDf, wthDir= "data/wth", yearShift= 16) {
+    with( cellDateDf, extractWthRecord( cell, date, wthDir, yearShift))
+  }
+  
+  wthSample <- melt( ddply( testCases, .(cell), extractWthRecordDf), id.vars= c( "cell", "date"))
+  
+#+END_SRC
+
+** merge and compare the samples
+
+#+BEGIN_SRC R
+  
+  mergedSamples <-
+    merge(
+      grbSample, wthSample,
+      by= names( grbSample)[ -4],
+      suffixes= c( ".grb", ".wth"))
+  
+  mergedSamples <-
+    transform(
+      mergedSamples,
+      error= value.grb - value.wth)
+  
+  mergedSamples <-
+    with(
+      mergedSamples,
+      mergedSamples[ order( variable),])
+  
+  errorSummary <- ddply(
+    mergedSamples,
+    .(variable),
+    summarize,
+    meanError= mean( error),
+    sdError= sd( error))
+  
+  sampleGrbWthErrors <- function( n= 1000) {
+    testDates <- {
+      start <- as.Date( "1979-01-01")
+      end <- as.Date( "2012-12-08")
+      start +
+        sample.int(
+          end- start, n,
+          replace= TRUE)}
+    testCells <- sample(
+      allCells, n)
+    testCases <- data.frame(
+      cell= testCells,
+      date= testDates,
+      stringsAsFactors= FALSE)
+    grbSample <-
+      melt( ddply( testCases, .(cell), extractGrbRecord),
+           id.vars= c( "cell", "date"))
+    wthSample <-
+      melt( ddply( testCases, .(cell), extractWthRecordDf),
+           id.vars= c( "cell", "date"))
+    mergedSamples <-
+      merge(
+        grbSample, wthSample,
+        by= names( grbSample)[ -4],
+        suffixes= c( ".grb", ".wth"))
+    mergedSamples <-
+      transform(
+        mergedSamples,
+        error= value.grb - value.wth)
+    errorSummary <- ddply(
+      mergedSamples,
+      .(variable),
+      summarize,
+      rmse= sqrt( mean( error ^2)),
+      mean= mean( value.grb),
+      cov= sqrt( mean( error ^2)) / mean( value.grb))
+    errorSummary
+  }
+#+END_SRC
+
+
+** wrap
