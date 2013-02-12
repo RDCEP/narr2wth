@@ -14,11 +14,11 @@ cell <- as.numeric( argv[ 5])
 
 ## wthFile <- args[ 6]
 
-precipFile <- "data/nc/precip/precip_1979.nc"
-tminFile <- "data/nc/tmin/tmin_1979.nc"
-tmaxFile <- "data/nc/tmax/tmax_1979.nc"
-solarFile <- "data/nc/solar/solar_1979.nc"
-cell <- 2109179
+## precipFile <- "data/nc/precip/precip_1979.nc"
+## tminFile <- "data/nc/tmin/tmin_1979.nc"
+## tmaxFile <- "data/nc/tmax/tmax_1979.nc"
+## solarFile <- "data/nc/solar/solar_1979.nc"
+## cell <- 2109179
 
 ## if( is.null( wthFile)) wthFile <- ""
 

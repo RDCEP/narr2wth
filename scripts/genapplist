@@ -1,9 +1,15 @@
 cat <<END
+westmere-rm rm		/bin/rm			null	null	null
+sandyb-rm rm		/bin/rm			null	null	null
 cluster	cnvgrib		$(which cnvgrib)	null	null	null
 cluster wgrib2		$(which wgrib2)		null	null	null
 cluster cdo		$(which cdo)		null	null	null
+westmere cdo		$(which cdo)		null	null	null
+sandyb cdo		$(which cdo)		null	null	null
 cluster sh		$(which sh)		null	null	null
 cluster nc_wth_gen      /project/joshuaelliott/narr/wth_gen/nc_wth_gen	null	null	null
+westmere nc_wth_gen      /project/joshuaelliott/narr/wth_gen/nc_wth_gen	null	null	null
+sandyb nc_wth_gen      /project/joshuaelliott/narr/wth_gen/nc_wth_gen	null	null	null
 #westmere  nc_wth_gen	/project/joshuaelliott/narr/ncWthGenYear.r	null	null	null
 #sandyb	  nc_wth_gen 	/project/joshuaelliott/narr/ncWthGenYear.r	null	null	null
 END

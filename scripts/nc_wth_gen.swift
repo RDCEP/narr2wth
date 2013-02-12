@@ -27,7 +27,7 @@ file wthGenErr[]<simple_mapper;
 int totProcs = 20;
 
 foreach proc in [1:totProcs] {
-  ( wthGenOut[ proc], wthGenErr[ proc]) = nc_wth_gen( 1979, 2012, "/project/joshuaelliott/narr/data/nc", "/project/joshuaelliott/narr/data/wth", "GENERIC1.WTH", totProcs, proc);
+  ( wthGenOut[ proc], wthGenErr[ proc]) = nc_wth_gen( 1979, 2012, "/project/joshuaelliott/narr/data/nc", "/project/joshuaelliott/narr/data/wth", "NOSHIFT.WTH", totProcs, proc);
 } 
 
 // foreach cell in cells {
