@@ -20,6 +20,18 @@ getNcByVarYear <- function( var, year) {
   list( nc_open( ncFn))
 }
 
+narr <- raster( getNcByVarYear( "tmin", 1979)[[1]]$filename)
+xmin( narr) <- xmin( narr) - 360
+xmax( narr) <- xmax( narr) - 360
+
+
+narrAnchorPoints <-
+  cbind(
+    lon= seq(
+      from= xmin( narr),
+      to= xmax( narr)- res( narr)[1],
+      by= res( narr)[1] * 10),
+    lat= ymax( narr))
 
 ## function readNarrValues( xy, var, year, n)
 
@@ -67,7 +79,7 @@ system.time({
           .inorder= TRUE,
           .multicombine= TRUE,
           .packages= "ncdf4") %dopar% {
-            readNarrValues( xy, var= var, year= year)
+            readNarrValues( narrAnchorPoints[ 40,], var= var, year= year)
           }
   names( narrValues) <- vars
   for( var in vars)
@@ -131,7 +143,7 @@ psimsNcFromXY <- function( xy, narrDays, resWorld= 5/60) {
   world <- raster()
   res( world) <- resWorld
   rowCol <- as.list( rowColFromCell( world, cellFromXY( world, xy))[1,])
-  ncFile <- sprintf( "data/nc/psims/%1$d/%1$d_%2$d.nc", rowCol$row, rowCol$col) 
+  ncFile <- sprintf( "data/nc/psims/%1$d/%2$d/%1$d_%2$d.nc", rowCol$row, rowCol$col) 
   if( !file.exists( dirname( ncFile))) {
     dir.create( path= dirname( ncFile), recursive= TRUE)
   }
@@ -152,11 +164,16 @@ psimsNcFromXY <- function( xy, narrDays, resWorld= 5/60) {
     verbose= FALSE)
 }
 
+inNarrMask <- function( xy, file= "gridLists/data/narr4326.tif") {
+  narrMask <- raster( file)
+  !is.na( extract( narrMask, rbind( xy)))
+}
 
 writePsimsNc <- function( narrValues, col, row) {
   xy <- c(
     lon= as.numeric( dimnames( narrValues[[ "tmin"]])$longitude[ col]),
     lat= as.numeric( dimnames( narrValues[[ "tmin"]])$latitude[  row]))
+  if( !inNarrMask( xy -c( 360, 0))) return( NA)
   psimsNc <- psimsNcFromXY(
     xy, narrDays= as.integer( dimnames( narrValues[[ "tmin"]])$time))
   for( var in names( narrValues)) 
@@ -171,10 +188,13 @@ writePsimsNc <- function( narrValues, col, row) {
 
 
 system.time(
-  writePsimsNc( narrValues, 1, 1))
+  psimsNcFile <- writePsimsNc( narrValues, 1, 1))
+
+psimsNcFile <- writePsimsNc( narrValues, 10, 240)
 
 system.time(
-  foreach( col= 1:10) %:%
-  foreach( row= 1:480) %dopar% {
-    writePsimsNc( narrValues, col, row)
+  psimsNcFile <-
+    foreach( col= 1:10) %:%
+      foreach( row= 1:480) %dopar% {
+        writePsimsNc( narrValues, col, row)
   })
