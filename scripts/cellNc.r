@@ -1,9 +1,17 @@
+#!/home/nbest/local/bin/r
+
+## --interactive
+
+stripe <- as.integer( argv[ 1])
+
 library( ncdf4)
 library( raster)
 library( abind)
 library( doMC)
 
 registerDoMC( multicore:::detectCores())
+## registerDoMC( 8)
+## options( error= recover)
 
 vars <- c( "tmin", "tmax", "precip", "solar")
 ## names( vars) <- vars
@@ -66,8 +74,10 @@ readNarrValues <- function(  xy, var= "tmin", year= 1979, n=10) {
 }
 
 
+## cat( sprintf( "Time to load data for stripe %d:", stripe))
 
-system.time({
+## system.time( {
+
   narrValues <-
     foreach(
       var= vars,
@@ -77,15 +87,17 @@ system.time({
           year= years,
           .combine= abind,
           .inorder= TRUE,
-          .multicombine= TRUE,
-          .packages= "ncdf4") %dopar% {
-            readNarrValues( narrAnchorPoints[ 40,], var= var, year= year)
+          .multicombine= TRUE
+          ##, .packages= "ncdf4"
+          ) %dopar% {
+            readNarrValues( narrAnchorPoints[ stripe,], var= var, year= year)
           }
   names( narrValues) <- vars
   for( var in vars)
     names( dimnames( narrValues[[ var]])) <-
       c( "longitude", "latitude", "time")
-})
+
+## })
 
 ## would plyr do a better job of preserving names than foreach while
 ## also providing parallelism?
@@ -112,13 +124,13 @@ ncVarsFunc <- function( xy, narrDays, compression= 5) {
   list(
     ncvar_def(
       name= "narr/tmin",
-      units= "K",
+      units= "C",
       longname= "daily minimum temperature",
       dim= ncDimsFunc( xy, narrDays),
       compression= 5),
     ncvar_def(
       name= "narr/tmax",
-      units= "K",
+      units= "C",
       longname= "daily maximum temperature",
       dim= ncDimsFunc( xy, narrDays),
       compression= 5),
@@ -130,7 +142,7 @@ ncVarsFunc <- function( xy, narrDays, compression= 5) {
       compression= 5),
     ncvar_def(
       name= "narr/solar",
-      units= "W/m^2",
+      units= "MJ/m^2/day",
       longname= "daily average downward short-wave radiation flux",
       dim= ncDimsFunc( xy, narrDays),
       compression= 5))
@@ -176,25 +188,39 @@ writePsimsNc <- function( narrValues, col, row) {
   if( !inNarrMask( xy -c( 360, 0))) return( NA)
   psimsNc <- psimsNcFromXY(
     xy, narrDays= as.integer( dimnames( narrValues[[ "tmin"]])$time))
-  for( var in names( narrValues)) 
+  for( var in names( narrValues)) {
+    vals <- narrValues[[ var]][ col, row,]
+    vals <- switch( var,
+        solar= vals *86400 /1000000, # Change units to MJ /m^2 /day
+        tmin= vals -273.15,          # change K to C
+        tmax= vals -273.15,
+        precip= vals)
+    ## browser()
     ncvar_put(
       nc= psimsNc,
       varid= sprintf( "narr/%s", var),
-      vals= narrValues[[ var]][ col, row,],
+      vals= vals,
       count= c( 1, 1, -1))
+  }
   nc_close( psimsNc)
   psimsNc$filename
 }
 
 
-system.time(
-  psimsNcFile <- writePsimsNc( narrValues, 1, 1))
+## time <-
+##   system.time(
 
-psimsNcFile <- writePsimsNc( narrValues, 10, 240)
+psimsNcFile <-
+  foreach( col= 1:10) %:%
+  foreach( row= 1:480, .combine= c) %dopar% {
+    writePsimsNc( narrValues, col, row)
+  }
 
-system.time(
-  psimsNcFile <-
-    foreach( col= 1:10) %:%
-      foreach( row= 1:480) %dopar% {
-        writePsimsNc( narrValues, col, row)
-  })
+##   )
+
+cat(
+  psimsNcFile,
+  ## sprintf( "\n\nTime to write %d files:", length( psimsNcFile)),
+  sep= "\n")
+
+## print( time)
