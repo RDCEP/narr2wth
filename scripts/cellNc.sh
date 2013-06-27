@@ -4,7 +4,7 @@
 
 printf "Submitting :: %10s | %+10s | %10s | %10s | %s\n"\
   "<job name>" "<output file> " "<error file>  " "<sbatch file>  " "<job id>"
-for stripe in {1..96};
+for stripe in {1..192};
 do
     job_name="cellNc.r.${stripe}"  #name I came up with
     out_file=./logs/${job_name}.out  #puts the slurm output into this file

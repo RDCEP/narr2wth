@@ -18,6 +18,7 @@ vars <- c( "tmin", "tmax", "precip", "solar")
 
 years <- 1979:2012
 
+colsPerStripe <- 5
 
 ## function getNcByVarYear( var, year)
 ## computes file name of input netCDF file by variable name and year
@@ -38,7 +39,7 @@ narrAnchorPoints <-
     lon= seq(
       from= xmin( narr),
       to= xmax( narr)- res( narr)[1],
-      by= res( narr)[1] * 10),
+      by= res( narr)[1] * colsPerStripe),
     lat= ymax( narr))
 
 ## function readNarrValues( xy, var, year, n)
@@ -90,7 +91,11 @@ readNarrValues <- function(  xy, var= "tmin", year= 1979, n=10) {
           .multicombine= TRUE
           ##, .packages= "ncdf4"
           ) %dopar% {
-            readNarrValues( narrAnchorPoints[ stripe,], var= var, year= year)
+            readNarrValues(
+              narrAnchorPoints[ stripe,],
+              var= var,
+              year= year,
+              n= colsPerStripe)
           }
   names( narrValues) <- vars
   for( var in vars)
@@ -114,7 +119,7 @@ ncDimsFunc <- function( xy, narrDays) {
       units= "degrees_north",
       vals= xy[[ "lat"]]),
     ncdim_def(
-      name= "narr/time",
+      name= "time",
       units= "days since 1978-12-31 00:00:00",
       vals= narrDays,
       unlim= TRUE))
@@ -123,29 +128,29 @@ ncDimsFunc <- function( xy, narrDays) {
 ncVarsFunc <- function( xy, narrDays, compression= 5) {
   list(
     ncvar_def(
-      name= "narr/tmin",
+      name= "tmin",
       units= "C",
       longname= "daily minimum temperature",
       dim= ncDimsFunc( xy, narrDays),
-      compression= 5),
+      compression= compression),
     ncvar_def(
-      name= "narr/tmax",
+      name= "tmax",
       units= "C",
       longname= "daily maximum temperature",
       dim= ncDimsFunc( xy, narrDays),
-      compression= 5),
+      compression= compression),
     ncvar_def(
-      name= "narr/precip",
+      name= "precip",
       units= "mm",
       longname= "daily total precipitation",
       dim= ncDimsFunc( xy, narrDays),
-      compression= 5),
+      compression= compression),
     ncvar_def(
-      name= "narr/solar",
+      name= "solar",
       units= "MJ/m^2/day",
       longname= "daily average downward short-wave radiation flux",
       dim= ncDimsFunc( xy, narrDays),
-      compression= 5))
+      compression= compression))
 }
 
 psimsNcFromXY <- function( xy, narrDays, resWorld= 5/60) {
@@ -155,7 +160,7 @@ psimsNcFromXY <- function( xy, narrDays, resWorld= 5/60) {
   world <- raster()
   res( world) <- resWorld
   rowCol <- as.list( rowColFromCell( world, cellFromXY( world, xy))[1,])
-  ncFile <- sprintf( "data/nc/psims/%1$d/%2$d/%1$d_%2$d.nc4", rowCol$row, rowCol$col) 
+  ncFile <- sprintf( "data/nc/psims/%1$d/%2$d/%1$d_%2$d.nc", rowCol$row, rowCol$col) 
   if( !file.exists( dirname( ncFile))) {
     dir.create( path= dirname( ncFile), recursive= TRUE)
   }
@@ -171,8 +176,8 @@ psimsNcFromXY <- function( xy, narrDays, resWorld= 5/60) {
   if( file.exists( ncFile)) file.remove( ncFile)
   nc_create(
     filename= ncFile,
-    vars= ncVarsFunc( xy, narrDays),
-    force_v4= TRUE,
+    vars= ncVarsFunc( xy, narrDays, compression= NA),
+    force_v4= FALSE, ## TRUE,
     verbose= FALSE)
 }
 
@@ -198,7 +203,7 @@ writePsimsNc <- function( narrValues, col, row) {
     ## browser()
     ncvar_put(
       nc= psimsNc,
-      varid= sprintf( "narr/%s", var),
+      varid= sprintf( "%s", var),
       vals= vals,
       count= c( 1, 1, -1))
   }
@@ -211,7 +216,7 @@ writePsimsNc <- function( narrValues, col, row) {
 ##   system.time(
 
 psimsNcFile <-
-  foreach( col= 1:10) %:%
+  foreach( col= 1:colsPerStripe) %:%
   foreach( row= 1:480, .combine= c) %dopar% {
     writePsimsNc( narrValues, col, row)
   }

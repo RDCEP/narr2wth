@@ -79,7 +79,7 @@ system.time({
           .inorder= TRUE,
           .multicombine= TRUE,
           .packages= "ncdf4") %dopar% {
-            readNarrValues( narrAnchorPoints[ 40,], var= var, year= year)
+            readNarrValues( narrAnchorPoints[ stripe,], var= var, year= year)
           }
   names( narrValues) <- vars
   for( var in vars)
@@ -102,7 +102,7 @@ ncDimsFunc <- function( xy, narrDays) {
       units= "degrees_north",
       vals= xy[[ "lat"]]),
     ncdim_def(
-      name= "narr/time",
+      name= "time",
       units= "days since 1978-12-31 00:00:00",
       vals= narrDays,
       unlim= TRUE))
@@ -111,25 +111,25 @@ ncDimsFunc <- function( xy, narrDays) {
 ncVarsFunc <- function( xy, narrDays, compression= 5) {
   list(
     ncvar_def(
-      name= "narr/tmin",
+      name= "tmin",
       units= "K",
       longname= "daily minimum temperature",
       dim= ncDimsFunc( xy, narrDays),
       compression= 5),
     ncvar_def(
-      name= "narr/tmax",
+      name= "tmax",
       units= "K",
       longname= "daily maximum temperature",
       dim= ncDimsFunc( xy, narrDays),
       compression= 5),
     ncvar_def(
-      name= "narr/precip",
+      name= "precip",
       units= "mm",
       longname= "daily total precipitation",
       dim= ncDimsFunc( xy, narrDays),
       compression= 5),
     ncvar_def(
-      name= "narr/solar",
+      name= "solar",
       units= "W/m^2",
       longname= "daily average downward short-wave radiation flux",
       dim= ncDimsFunc( xy, narrDays),
@@ -143,7 +143,7 @@ psimsNcFromXY <- function( xy, narrDays, resWorld= 5/60) {
   world <- raster()
   res( world) <- resWorld
   rowCol <- as.list( rowColFromCell( world, cellFromXY( world, xy))[1,])
-  ncFile <- sprintf( "data/nc/psims/%1$d/%2$d/%1$d_%2$d.nc4", rowCol$row, rowCol$col) 
+  ncFile <- sprintf( "data/nc/psims/%1$d/%2$d/%1$d_%2$d.nc", rowCol$row, rowCol$col) 
   if( !file.exists( dirname( ncFile))) {
     dir.create( path= dirname( ncFile), recursive= TRUE)
   }
@@ -160,7 +160,7 @@ psimsNcFromXY <- function( xy, narrDays, resWorld= 5/60) {
   nc_create(
     filename= ncFile,
     vars= ncVarsFunc( xy, narrDays),
-    force_v4= TRUE,
+    force_v4= FALSE,
     verbose= FALSE)
 }
 
@@ -179,7 +179,7 @@ writePsimsNc <- function( narrValues, col, row) {
   for( var in names( narrValues)) 
     ncvar_put(
       nc= psimsNc,
-      varid= sprintf( "narr/%s", var),
+      varid= sprintf( "%s", var),
       vals= narrValues[[ var]][ col, row,],
       count= c( 1, 1, -1))
   nc_close( psimsNc)

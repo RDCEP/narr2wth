@@ -2,9 +2,9 @@
 
 #SBATCH --account=pi-joshuaelliott
 #SBATCH --qos=normal
-#SBATCH --partition=westmere,sandyb
-# #SBATCH --partition=sandyb
-#SBATCH --time=60  # max minutes per run, will help the scheduler to get your job to run faster
+#SBATCH --partition=westmere,sandyb,bigmem
+# #SBATCH --partition=bigmem
+#SBATCH --time=30  # max minutes per run, will help the scheduler to get your job to run faster
 #SBATCH --exclusive
 
 START=$(date)
